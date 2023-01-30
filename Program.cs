@@ -34,7 +34,16 @@ builder.Services.AddTransient<TokenService>();//Sempre cria uma nova instância, 
 //builder.Services.AddScoped(); // Ele age por requisição, enquanto a requisição ele utilizará a mesma instância.
 //uilder.Services.AddSingleton(); // Singleton => 1 por App!
 
+
 var app = builder.Build();
+Configuration.JwtKey = app.Configuration.GetValue<string>("JwtKey");
+Configuration.ApiKeyName = app.Configuration.GetValue<string>("ApiKeyName");
+Configuration.ApiKey = app.Configuration.GetValue<string>("ApiKey");
+
+//O bind passa todos os itens dentro de um mesmo objeto
+var smtp = new Configuration.SmtpConfiguration();
+app.Configuration.GetSection("SmtpConfiguration").Bind(smtp);
+Configuration.Smtp = smtp;
 
 app.UseAuthentication();
 app.UseAuthorization();
