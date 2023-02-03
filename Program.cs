@@ -16,6 +16,7 @@ LoadConfiguration(app);
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles(); //==> Não é possível renderizar imagens, js e css. Sem esse método.
 app.MapControllers();
 app.Run();
 
