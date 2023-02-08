@@ -3,6 +3,7 @@ using Blog.Data;
 using Blog.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IO.Compression;
 using System.Text;
@@ -13,15 +14,25 @@ ConfigureAuthentication(builder);
 ConfigureMvc(builder);
 ConfigureServices(builder);
 
+builder.Services.AddEndpointsApiExplorer();//Adiciona o Swagger
+builder.Services.AddSwaggerGen();//Gera o código html do Swagger
 
 var app = builder.Build();
 LoadConfiguration(app);
 
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseResponseCompression();
-app.UseStaticFiles(); //==> Não é possível renderizar imagens, js e css. Sem esse método.
 app.MapControllers();
+app.UseStaticFiles(); //==> Não é possível renderizar imagens, js e css. Sem esse método.
+app.UseResponseCompression();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 app.Run();
 
 void LoadConfiguration(WebApplication app)
@@ -84,8 +95,12 @@ void ConfigureMvc(WebApplicationBuilder builder)
 
 void ConfigureServices(WebApplicationBuilder builder)
 {
-    builder.Services.AddDbContext<BlogDataContext>();
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    builder.Services.AddDbContext<BlogDataContext>(
+        options =>
+            options.UseSqlServer(connectionString));
     builder.Services.AddTransient<TokenService>();//Sempre cria uma nova instância, não precisa de um Estado.
+    //builder.Services.AddDbContext<BlogDataContext>();
     //builder.Services.AddScoped(); // Ele age por requisição, enquanto a requisição ele utilizará a mesma instância.
     //builder.Services.AddSingleton(); // Singleton => 1 por App!
     builder.Services.AddTransient<EmailService>();
